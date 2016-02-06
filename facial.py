@@ -5,9 +5,12 @@ from PIL import Image, ImageTk
 # Author: Harvey Shi
 
 # const
-EMO_ANGRY = 100
-EMO_SAD = 101
-EMO_HAPPY = 102
+EMO_ANGRY = "EMO_ANGRY"
+EMO_SAD = "EMO_SAD"
+EMO_HAPPY = "EMO_HAPPY"
+EMO_DISGUST = "EMO_DISGUST"
+EMO_FEAR = "EMO_FEAR"
+EMO_NORMAL = "EMO_NORMAL"
 
 CAMERA_PORT = 0
 # Number of frames to throw away while the camera adjusts to light levels
@@ -27,6 +30,19 @@ FACE_PATH    = "faces/"
 
 # For face recognition we will the the LBPH Face Recognizer
 RECOGNIZER = cv2.createLBPHFaceRecognizer()
+INITIALIZED = False
+MAPPING = {}
+
+def needsRecognizer(func):
+    # A decorator which initializes recognizer before use
+    def f(*args, **kwargs):
+        if not INITIALIZED:
+            print "Init recognizer"
+            dct = getImagesAndLabels("faces")
+            MAPPING = trainRecognizer(dct)
+        return func(*args, **kwargs)
+    INITIALIZED = True
+    return f
 
 def getImagesAndLabels(path):
     # Append all the absolute image paths in a list image_paths
@@ -57,6 +73,21 @@ def getImagesAndLabels(path):
 
     return dct
 
+def trainRecognizer(dct):
+    images = []
+    hashed_labels = []
+    mapping = {}
+    for andrew_id in dct.keys():
+        for emotion in dct[andrew_id].keys():
+            fname = andrew_id + "." + emotion + ".png"
+            # Mapping: __hash__ : fname
+            mapping[fname.__hash__()%2000000] = fname
+            images.append(dct[andrew_id][emotion])
+            hashed_labels.append(fname.__hash__()%2000000)
+    RECOGNIZER.train(images, np.array(hashed_labels))
+    print "Trained"
+    return mapping
+
 def saveUserFace(dct):
     """saveUserFace(dct) -> None"""
     # Format of dct: {"ANDREW_ID":{"sad":nparray, ...} ...}
@@ -67,20 +98,7 @@ def saveUserFace(dct):
                 info[emotion])
             print "Saved user <%s> in [%s] state."%(andrew_id, emotion)
 
-def trainRecognizer(dct):
-    images = []
-    hashed_labels = []
-    mapping = {}
-    for andrew_id in dct.keys():
-        for emotion in dct[andrew_id].keys():
-            fname = andrew_id + "." + emotion + ".png"
-            # Mapping: __hash__ : fname
-            mapping[fname.__hash__()] = fname
-            images.append(dct[andrew_id][emotion])
-            hashed_labels.append(fname.__hash__())
-    RECOGNIZER.train(images, np.array(hashed_labels))
-    return mapping
-
+@needsRecognizer
 def recognizeImage(img):
     # recognizeImage(img) -> Bool
     faces = FACE_CASCADE.detectMultiScale(img)
@@ -106,8 +124,23 @@ def focusCamera():
     for i in xrange(RAMP_FRAMES):
         CAMERA.read()
 
+@needsRecognizer
 def getUserEmotion():
-    return EMO_SAD
+    def getEmotionFromName(name):
+        return name.split(".")[1]
+    predict, prob = recognizeImage(cv2.cvtColor(_getCameraRaw(),
+        cv2.COLOR_BGR2GRAY))
+    print predict
+    emotion = getEmotionFromName(MAPPING[predict])
+    emo_mapping = {
+        "happy":EMO_HAPPY,
+        "sad":EMO_SAD,
+        "fear":EMO_FEAR,
+        "angry":EMO_ANGRY,
+        "disgust":EMO_DISGUST,
+        "normal":EMO_NORMAL
+    }
+    return emo_mapping[emotion]
 
 def getCameraSnapShot():
     # getCameraSnapShot() -> TkImage
@@ -118,12 +151,39 @@ def getCameraSnapShot():
 
 # unit test code
 if __name__ == "__main__":
+    import time
+
+    dct = getImagesAndLabels("faces")
+    MAPPING = trainRecognizer(dct)
+    print MAPPING
     print getUserEmotion()
     im = _getCameraRaw()
     cv2.imshow("image", im)
     cv2.waitKey(0)
-    #saveUserFace({"haowensh":{"happy":im}})
-    a = getImagesAndLabels("faces")
+    """
+    cv2.imshow("image", im)
+    cv2.waitKey(0)
+    saveUserFace({"henryzh47":{"happy":im}})
+    time.sleep(1)
+
+    im = _getCameraRaw()
+    cv2.imshow("image", im)
+    cv2.waitKey(0)
+    saveUserFace({"henryzh47":{"normal":im}})
+    time.sleep(1)
+
+    im = _getCameraRaw()
+    cv2.imshow("image", im)
+    cv2.waitKey(0)
+    saveUserFace({"henryzh47":{"angry":im}})
+    time.sleep(1)
+
+    im = _getCameraRaw()
+    cv2.imshow("image", im)
+    cv2.waitKey(0)
+    saveUserFace({"henryzh47":{"fear":im}})
+    """
+    #a = getImagesAndLabels("faces")
     #print a
 
     cv2.destroyAllWindows()
