@@ -46,7 +46,7 @@ def redrawAll(root, canvas, data):
         # test facial lib
         if data.mode == "MAIN":
             mainRedrawAll(root, canvas, data)
-    
+
 
 ########################################
 # Main Function: Emotion Recognition
@@ -59,7 +59,7 @@ def mainInit(data):
     loadEmotionPic(data)
 
 def loadEmotionPic(data):
-    data.sad = ImageTk.PhotoImage(file=data.utilPicPath+"sad.png")
+    data.sad = ImageTk.PhotoImage(file=data.utilPicPath+"test_sad.png")
     data.happy = ImageTk.PhotoImage(file=data.utilPicPath+"happy.png")
     data.angry = ImageTk.PhotoImage(file=data.utilPicPath+"angry.png")
 
@@ -72,12 +72,12 @@ def mainTimerFired(root, data):
         data.mainEmotion = facial.getUserEmotion()
 
 def mainRedrawAll(root, canvas, data):
+    canvas.create_image((540,360), image=data.snapshot)
+    # implement bar at the right
+    canvas.create_image(data.mainBarPos, image=data.mainBar)
+
     canvas.create_image(data.center, image=data.sad)
-    canvas.sad = data.sad
-    print data.mainEmotion
-    # canvas.create_image((540,360), image=data.snapshot)
-    # # implement bar at the right
-    # canvas.create_image(data.mainBarPos, image=data.mainBar)
+    canvas.image = data.sad
     # implement figure on the left
     if data.mainEmotion == facial.EMO_SAD:
         print 1
