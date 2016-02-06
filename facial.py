@@ -67,35 +67,26 @@ def saveUserFace(dct):
                 info[emotion])
             print "Saved user <%s> in [%s] state."%(andrew_id, emotion)
 
-def trainRecognizer(images, labels):
-    pass
-"""
-    # Path to the Yale Dataset
-    path = './yalefaces'
-    # Call the get_images_and_labels function and get the face images and the
-    # corresponding labels
-    images, labels = get_images_and_labels(path)
-    cv2.destroyAllWindows()
+def trainRecognizer(dct):
+    images = []
+    hashed_labels = []
+    mapping = {}
+    for andrew_id in dct.keys():
+        for emotion in dct[andrew_id].keys():
+            fname = andrew_id + "." + emotion + ".png"
+            # Mapping: __hash__ : fname
+            mapping[fname.__hash__()] = fname
+            images.append(dct[andrew_id][emotion])
+            hashed_labels.append(fname.__hash__())
+    RECOGNIZER.train(images, np.array(hashed_labels))
+    return mapping
 
-    # Perform the tranining
-    recognizer.train(images, np.array(labels))
-
-    # Append the images with the extension .sad into image_paths
-    image_paths = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.sad')]
-    for image_path in image_paths:
-        predict_image_pil = Image.open(image_path).convert('L')
-        predict_image = np.array(predict_image_pil, 'uint8')
-        faces = faceCascade.detectMultiScale(predict_image)
-        for (x, y, w, h) in faces:
-            nbr_predicted, conf = recognizer.predict(predict_image[y: y + h, x: x + w])
-            nbr_actual = int(os.path.split(image_path)[1].split(".")[0].replace("subject", ""))
-            if nbr_actual == nbr_predicted:
-                print "{} is Correctly Recognized with confidence {}".format(nbr_actual, conf)
-            else:
-                print "{} is Incorrect Recognized as {}".format(nbr_actual, nbr_predicted)
-            cv2.imshow("Recognizing Face", predict_image[y: y + h, x: x + w])
-            cv2.waitKey(1000)
-"""
+def recognizeImage(img):
+    # recognizeImage(img) -> Bool
+    faces = FACE_CASCADE.detectMultiScale(img)
+    for (x, y, w, h) in faces:
+        nbr_predicted, prob = RECOGNIZER.predict(img[y:y+h, x:x+w])
+    return nbr_predicted, prob
 
 def _toTkImage(img):
     # convert to RGB channel
