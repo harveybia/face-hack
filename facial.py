@@ -128,15 +128,20 @@ def focusCamera():
         CAMERA.read()
 
 @needsRecognizer
-def getUserEmotion():
-    def getEmotionFromName(name):
-        return name.split(".")[1]
+def getFacePrediction():
+    # Usage: MAPPING[predict] -> UserInformation
     predict, prob = recognizeImage(cv2.cvtColor(_getCameraRaw(),
         cv2.COLOR_BGR2GRAY))
     print predict
+    return predict, prob
+
+@needsRecognizer
+def getUserEmotion():
+    predict = getFacePrediction()
     if predict == 0:
         return EMO_NOTFOUND, prob
-    emotion = getEmotionFromName(MAPPING[predict])
+
+    emotion = MAPPING[predict].split(".")[1]
     emo_mapping = {
         "happy":EMO_HAPPY,
         "sad":EMO_SAD,
