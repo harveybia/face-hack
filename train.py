@@ -39,7 +39,7 @@ def trainInit(data):
     data.imgCenter3 = (w / 2 + 2*w, 720 / 2)
     data.imgCenter4 = (w / 2 + 3*w, 720 / 2)
     data.imgCenter5 = (w / 2 + 4*w, 720 / 2)
-    data.utilPicPath = "face-hack/utilitypic/"
+    data.utilPicPath = "utilitypic/"
     data.happySaveSuccess = False
     data.sadSaveSuccess = False
     data.angerSaveSuccess = False
