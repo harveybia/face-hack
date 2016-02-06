@@ -11,6 +11,7 @@ EMO_HAPPY = "EMO_HAPPY"
 EMO_DISGUST = "EMO_DISGUST"
 EMO_FEAR = "EMO_FEAR"
 EMO_NORMAL = "EMO_NORMAL"
+EMO_NOTFOUND = "EMO_NOTFOUND"
 
 CAMERA_PORT = 0
 # Number of frames to throw away while the camera adjusts to light levels
@@ -67,9 +68,9 @@ def getImagesAndLabels(path):
         for (x, y, w, h) in faces:
             if andrew_id not in dct.keys(): dct[andrew_id] = {}
             dct[andrew_id][emotion] = image[y:y+h, x:x+w]
-            cv2.imshow("Facial Recognition in progress...",
-                dct[andrew_id][emotion])
-            cv2.waitKey(10)
+            #cv2.imshow("Facial Recognition in progress...",
+                #dct[andrew_id][emotion])
+            #cv2.waitKey(10)
 
     return dct
 
@@ -102,9 +103,11 @@ def saveUserFace(dct):
 def recognizeImage(img):
     # recognizeImage(img) -> Bool
     faces = FACE_CASCADE.detectMultiScale(img)
+    predicted = 0
+    prob = 0
     for (x, y, w, h) in faces:
-        nbr_predicted, prob = RECOGNIZER.predict(img[y:y+h, x:x+w])
-    return nbr_predicted, prob
+        predicted, prob = RECOGNIZER.predict(img[y:y+h, x:x+w])
+    return predicted, prob
 
 def _toTkImage(img):
     # convert to RGB channel
@@ -131,6 +134,8 @@ def getUserEmotion():
     predict, prob = recognizeImage(cv2.cvtColor(_getCameraRaw(),
         cv2.COLOR_BGR2GRAY))
     print predict
+    if predict == 0:
+        return EMO_NOTFOUND, prob
     emotion = getEmotionFromName(MAPPING[predict])
     emo_mapping = {
         "happy":EMO_HAPPY,
@@ -140,7 +145,7 @@ def getUserEmotion():
         "disgust":EMO_DISGUST,
         "normal":EMO_NORMAL
     }
-    return emo_mapping[emotion]
+    return emo_mapping[emotion], prob
 
 def getCameraSnapShot():
     # getCameraSnapShot() -> TkImage

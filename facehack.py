@@ -2,7 +2,6 @@ from Tkinter import *
 import cv2
 from PIL import Image, ImageTk
 import facial
-import pyglet
 import os
 import threading
 
@@ -63,60 +62,67 @@ def createButton(data):
     data.button.SIDEBAR3,
     data.button.NEXTSONG]
 
+    data.utilButtonList = [
+    data.button.BACK,
+    data.button.EXIT,
+    data.button.SETTINGS]
+
 #######################################
 # Button Functions
 #######################################
 def BACK(root,data):
-    if data.prevMode != None:
-        data.mode = data.prevMode
+    print ":::Performing BACK Segue"
+    if data.prevMode != []:
+        data.mode = data.prevMode.pop(-1)
 
 def EXIT(root,data):
     data.terminate = True
     exit(root,data)
 
 def SETTINGS(root,data):
-    data.prevMode = data.mode
+    data.prevMode.append(data.mode)
     data.mode = "TRAIN"
+    trainInit(data)
 
 def SIDEBAR1(root,data):
     if data.mainEmotion == facial.EMO_HAPPY:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "HAPPYS1"
         happyS1Init(data)
     elif data.mainEmotion == facial.EMO_SAD:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "SADS1"
         sadS1Init(data)
     elif data.mainEmotion == facial.EMO_ANGRY:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "ANGRYS1"
         angryS1Init(data)
 
 def SIDEBAR2(root,data):
     if data.mainEmotion == facial.EMO_HAPPY:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "HAPPYS2"
         happyS2Init(data)
     elif data.mainEmotion == facial.EMO_SAD:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "SADS2"
         sadS2Init(data)
     elif data.mainEmotion == facial.EMO_ANGRY:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "ANGRYS2"
         angryS2Init(data)
 
 def SIDEBAR3(root,data):
     if data.mainEmotion == facial.EMO_HAPPY:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "HAPPYS3"
         happyS3Init(data)
     elif data.mainEmotion == facial.EMO_SAD:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "SADS3"
         sadS3Init(data)
     elif data.mainEmotion == facial.EMO_ANGRY:
-        data.prevMode = data.mode
+        data.prevMode.append(data.mode)
         data.mode = "ANGRYS3"
         angryS3Init(data)
 
@@ -135,9 +141,11 @@ def init(data):
     data.mainCounter = 0
     data.terminate = False
     data.mode = "MAIN"
-    data.prevMode = None
+    data.prevMode = []
     data.utilPicPath = "utilitypic/"
     createButton(data)
+    dct = facial.getImagesAndLabels("faces")
+    facial.MAPPING = facial.trainRecognizer(dct)
     
 def initModes(data):
     mainInit(data)
@@ -150,8 +158,8 @@ def exit(root, data):
 def mousePressed(root, event, data):
     # use event.x and event.y
     if not data.terminate:
-        # if data.mode == "TRAIN":
-        #     trainMousePressed(root, event, data)
+        if data.mode == "TRAIN":
+            trainMousePressed(root, event, data)
         if data.mode == "MAIN":
             mainMousePressed(root, event, data)
 
@@ -182,8 +190,8 @@ def keyPressed(root, event, data):
         # use event.char and event.keysym
         if event.keysym == "q":
             exit(root, data)
-        # if data.mode == "TRAIN":
-        #     trainKeyPressed(root, event, data)
+        if data.mode == "TRAIN":
+            trainKeyPressed(root, event, data)
         if data.mode == "MAIN":
             mainKeyPressed(root, event, data)
 
@@ -211,8 +219,8 @@ def keyPressed(root, event, data):
 
 def timerFired(root, data):
     if not data.terminate:
-        # if data.mode == "TRAIN":
-        #     trainTimerFired(root,data)
+        if data.mode == "TRAIN":
+            trainTimerFired(root,data)
         if data.mode == "MAIN":
             mainTimerFired(root, data)
 
@@ -237,11 +245,12 @@ def timerFired(root, data):
         if data.mode == "ANGRYS3":
             angryS3TimerFired(root, data)
         pass
+    if data.prevMode: print data.prevMode
 
 def redrawAll(root, canvas, data):
     if not data.terminate:
-        # if data.mode == "TRAIN":
-        #     trainRedrawAll(root, canvas, data)
+        if data.mode == "TRAIN":
+            trainRedrawAll(root, canvas, data)
         if data.mode == "MAIN":
             mainRedrawAll(root, canvas, data)
 
@@ -268,10 +277,125 @@ def redrawAll(root, canvas, data):
         pass
 
 ########################################
+# Train Mode
+########################################
+def trainInit(data):
+    # load data.xyz as appropriate
+    w = 1080 / 5
+    data.width = 1080
+    data.height = 720
+    (data.margin1, data.margin2) = (0, w)
+    (data.margin3, data.margin4) = (2 * w, 3 * w)
+    (data.margin5, data.margin6) = (4 * w, 5 * w)
+    data.highLightHappy = False
+    data.highLightSad = False
+    data.highLightAnger = False
+    data.selectHappy = False
+    data.selectSad = False
+    data.selectAnger = False
+    data.imgCenter1 = (w / 2, 720 / 2)
+    data.imgCenter2 = (w / 2 + w, 720 / 2)
+    data.imgCenter3 = (w / 2 + 2*w, 720 / 2)
+    data.imgCenter4 = (w / 2 + 3*w, 720 / 2)
+    data.imgCenter5 = (w / 2 + 4*w, 720 / 2)
+    data.utilPicPath = "utilitypic/"
+    data.happySaveSuccess = False
+    data.sadSaveSuccess = False
+    data.angerSaveSuccess = False
+    loadImage(data)
+    
+def loadImage(data):
+    data.disgustBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"disgustBW.jpg"))
+    data.happyBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happyBW.jpg"))
+    data.angerBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"angerBW.jpg"))
+    data.fearBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"fearBW.jpg"))
+    data.sadBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sadBW.jpg"))
+    data.sad = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sad.jpg"))
+    data.happy = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happy.jpg"))
+    data.anger = ImageTk.PhotoImage(Image.open(data.utilPicPath+"anger.jpg"))
+
+def trainMousePressed(root, event, data):
+    # use event.x and event.y
+    if (event.x < data.margin3 and event.x > data.margin2): #Happy
+        data.selectHappy = not data.selectHappy
+        if (data.selectHappy == True):
+            data.selectSad = False
+            data.selectAnger = False
+    elif (event.x < data.margin4 and event.x > data.margin3): #Sad
+        data.selectSad = not data.selectSad
+        if (data.selectSad == True):
+            data.selectHappy = False
+            data.selectAnger = False
+    elif (event.x < data.margin5 and event.x > data.margin4): #anger
+        data.selectAnger = not data.selectAnger
+        if (data.selectAnger == True):
+            data.selectHappy = False
+            data.selectSad = False
+    if (event.x < data.margin3 and event.x > data.margin2): #Happy
+        data.highLightHappy = not data.highLightHappy
+        if (data.highLightHappy == True):
+            data.highLightSad = False
+            data.highLightAnger = False
+    elif (event.x < data.margin4 and event.x > data.margin3): #Sad
+        data.highLightSad = not data.highLightSad
+        if (data.highLightSad == True):
+            data.highLightHappy = False
+            data.highLightAnger = False
+    elif (event.x < data.margin5 and event.x > data.margin4): #anger
+        data.highLightAnger = not data.highLightAnger
+        if (data.highLightAnger == True):
+            data.highLightHappy = False
+            data.highLightSad = False
+    if data.happySaveSuccess: data.highLightHappy = True
+    if data.sadSaveSuccess: data.highLightSad = True
+    if data.angerSaveSuccess: data.highLightAnger = True
+
+def trainKeyPressed(root, event, data):
+    # use event.char and event.keysym
+    if (data.selectHappy):
+       if (event.keysym == "c"):
+           happyFace = facial._getCameraRaw()
+           facial.saveUserFace({"fafa":{"happy":happyFace}})
+           data.happySaveSuccess = True
+    if (data.selectSad):
+       if (event.keysym == "c"):
+           sadFace = facial._getCameraRaw()
+           facial.saveUserFace({"fafa":{"sad":sadFace}})
+           data.sadSaveSuccess = True
+    if (data.selectAnger):
+       if (event.keysym == "c"):
+           angerFace = facial._getCameraRaw()
+           facial.saveUserFace({"fafa":{"angry":angerFace}})
+           data.angerSaveSuccess = True
+    if (event.keysym == "Escape"):
+        data.button.BACK.function(root, data)
+
+def trainTimerFired(root, data):
+    pass
+
+def trainRedrawAll(root, canvas, data):
+    # draw in canvas
+    canvas.create_image(data.imgCenter1, image = data.disgustBW)
+    canvas.create_image(data.imgCenter5, image = data.fearBW)
+    # First Create the two that we won't change in this project
+    if (data.highLightHappy):
+        canvas.create_image(data.imgCenter2, image = data.happy)
+    if (not data.highLightHappy):
+        canvas.create_image(data.imgCenter2, image = data.happyBW)
+    if (data.highLightSad):
+        canvas.create_image(data.imgCenter3, image = data.sad)
+    if (not data.highLightSad):
+        canvas.create_image(data.imgCenter3, image = data.sadBW)
+    if (data.highLightAnger):
+        canvas.create_image(data.imgCenter4, image = data.anger)
+    if (not data.highLightAnger):
+        canvas.create_image(data.imgCenter4, image = data.angerBW)
+
+########################################
 # Main Function: Emotion Recognition
 ########################################
 def mainInit(data):
-    data.mainWait = 1 # seconds
+    data.mainWait = 0.5 # seconds
     data.mainEmotion = None
     loadEmotionPic(data)
 
@@ -318,9 +442,13 @@ def mainKeyPressed(root, event, data):
 def mainTimerFired(root, data):
     data.mainCounter = (data.mainCounter + 1) % 10000
     data.snapshot = facial.getCameraSnapShot()
-    time = data.mainCounter * data.timerDelay / 1000 # in seconds
-    if time % data.mainWait == 0:
-        data.mainEmotion = "EMO_ANGRY"# facial.getUserEmotion()
+    time = data.mainCounter * data.timerDelay # in milli seconds
+    if time % (data.mainWait * 1000) == 0:
+        print 98765467897654678654123123
+        emotion, prob = facial.getUserEmotion()# facial.EMO_SAD #
+        if emotion != facial.EMO_NOTFOUND or prob > 0.5:
+            data.mainEmotion = emotion
+        print data.mainEmotion
 
 def mainRedrawAll(root, canvas, data):
     canvas.create_image((540,360), image=data.snapshot)
@@ -340,7 +468,9 @@ def happyS1Init(data):
          % (data.mode, data.mode))
 
 def happyS1MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def happyS1KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -360,7 +490,9 @@ def happyS2Init(data):
          % (data.mode, data.mode))
 
 def happyS2MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def happyS2KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -380,7 +512,9 @@ def happyS3Init(data):
          % (data.mode, data.mode))
 
 def happyS3MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def happyS3KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -400,7 +534,9 @@ def sadS1Init(data):
          % (data.mode, data.mode))
 
 def sadS1MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def sadS1KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -420,7 +556,9 @@ def sadS2Init(data):
          % (data.mode, data.mode))
 
 def sadS2MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def sadS2KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -440,7 +578,9 @@ def sadS3Init(data):
          % (data.mode, data.mode))
 
 def sadS3MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def sadS3KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -460,7 +600,9 @@ def angryS1Init(data):
          % (data.mode, data.mode))
 
 def angryS1MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def angryS1KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -480,7 +622,9 @@ def angryS2Init(data):
          % (data.mode, data.mode))
 
 def angryS2MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def angryS2KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -500,7 +644,9 @@ def angryS3Init(data):
          % (data.mode, data.mode))
 
 def angryS3MousePressed(root, event, data):
-    pass
+    for button in data.utilButtonList:
+        if button.inBounds(event.x, event.y):
+            button.function(root,data)
 
 def angryS3KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -546,7 +692,6 @@ def run(width=300, height=300):
     data = Struct()
     data.width = width
     data.height = height
-    data.timerDelay = 100 # milliseconds
     init(data)
     # create the root and the canvas
     root = Tk()
