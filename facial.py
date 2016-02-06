@@ -23,6 +23,7 @@ CAMERA = cv2.VideoCapture(CAMERA_PORT)
 # For face detection we will use the Haar Cascade provided by OpenCV.
 CASCADE_PATH = "haarcascade_frontalface_default.xml"
 FACE_CASCADE = cv2.CascadeClassifier(CASCADE_PATH)
+FACE_PATH    = "faces/"
 
 # For face recognition we will the the LBPH Face Recognizer
 RECOGNIZER = cv2.createLBPHFaceRecognizer()
