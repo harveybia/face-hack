@@ -2,6 +2,9 @@ from Tkinter import *
 import cv2
 from PIL import Image, ImageTk
 import facial
+import pyglet
+import os
+import threading
 
 # Animation framework from CMU 15-112 course page:
 # https://www.cs.cmu.edu/~112/notes/events-example0.py
@@ -58,11 +61,28 @@ def mainInit(data):
     data.mainBarPos = (1000,500)
     loadEmotionPic(data)
 
+
 def loadEmotionPic(data):
     data.sad = ImageTk.PhotoImage(file=data.utilPicPath+"test_sad.png")
     data.happy = ImageTk.PhotoImage(file=data.utilPicPath+"happy.png")
     data.angry = ImageTk.PhotoImage(file=data.utilPicPath+"angry.png")
 
+def loadMP3(data):
+    data.angryMP3 = {}
+    for mp3 in os.listdir("music/angry"):
+        if mp3.endswith("mp3"):
+            data.angryMP3[mp3] = pyglet.media.load("music/angry/" + mp3,streaming=False)
+            data.angryMP3[mp3].play()
+
+    data.happyMP3 = {}
+    for mp3 in os.listdir("music/happy"):
+        if mp3.endswith("mp3"):
+            data.happyMP3[mp3] = pyglet.media.load("music/happy/" + mp3,streaming=False)
+    data.sadMP3 = {}
+    for mp3 in os.listdir("music/sad"):
+        if mp3.endswith("mp3"):
+            data.sadMP3[mp3] = pyglet.media.load("music/sad/" + mp3,streaming=False)
+    
 
 def mainTimerFired(root, data):
     data.mainCounter = (data.mainCounter + 1) % 10000
@@ -80,13 +100,13 @@ def mainRedrawAll(root, canvas, data):
     canvas.image = data.sad
     # implement figure on the left
     if data.mainEmotion == facial.EMO_SAD:
-        print 1
         canvas.create_image(data.center, image=data.sad)
     if data.mainEmotion == facial.EMO_HAPPY:
         canvas.create_image(data.center, image=data.happy)
     if data.mainEmotion == facial.EMO_ANGRY:
         canvas.create_image(data.center, image=data.angry)
     # implement music
+
     # implement recommendations
 
 
