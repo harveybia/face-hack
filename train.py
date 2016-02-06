@@ -1,5 +1,5 @@
 
-from tkinter import *
+from Tkinter import *
 from PIL import ImageTk, Image
 import facial
 
@@ -33,16 +33,17 @@ def trainInit(data):
     data.imgCenter3 = (w / 2 + 2*w, 720 / 2)
     data.imgCenter4 = (w / 2 + 3*w, 720 / 2)
     data.imgCenter5 = (w / 2 + 4*w, 720 / 2)
+    data.utilPicPath = "utilitypic/"
     
 def loadImage(data):
-    data.disgustBW = ImageTk.PhotoImage(Image.open("disgustBW.jpg"))
-    data.happyBW = ImageTk.PhotoImage(Image.open("happyBW.jpg"))
-    data.angerBW = ImageTk.PhotoImage(Image.open("angerBW.jpg"))
-    data.fearBW = ImageTk.PhotoImage(Image.open("fearBW.jpg"))
-    data.sadBW = ImageTk.PhotoImage(Image.open("sadBW.jpg"))
-    data.sad = ImageTk.PhotoImage(Image.open("sad.jpg"))
-    data.happy = ImageTk.PhotoImage(Image.open("happy.jpg"))
-    data.anger = ImageTk.PhotoImage(Image.open("anger.jpg"))
+    data.disgustBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"disgustBW.jpg"))
+    data.happyBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happyBW.jpg"))
+    data.angerBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"angerBW.jpg"))
+    data.fearBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"fearBW.jpg"))
+    data.sadBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sadBW.jpg"))
+    data.sad = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sad.jpg"))
+    data.happy = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happy.jpg"))
+    data.anger = ImageTk.PhotoImage(Image.open(data.utilPicPath+"anger.jpg"))
 
 def trainMousePressed(event, data):
     # use event.x and event.y
