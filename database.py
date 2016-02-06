@@ -8,7 +8,7 @@ def loadUserDict():
     return pickle.load(open('user.db', 'wb'))
 
 def newBrowserTab(url):
-    webbrowser.open(url, new=1)
+    webbrowser.open(url)
 
 if __name__ == "__main__":
     webbrowser.open('http://www.google.com', new=1)

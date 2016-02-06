@@ -6,7 +6,7 @@ import facial
 import os
 import threading
 import tkSimpleDialog
-
+import database as db
 global canvas
 
 #######################################
@@ -76,15 +76,16 @@ def createButton(data):
 #######################################
 def BACK(root,data):
     print ":::Performing BACK Segue"
+    if data.mode == "TRAIN":
+        global canvas
+        loadingFace = ImageTk.PhotoImage(Image.open(data.utilPicPath+"loadingFace.png"))
+        canvas.delete(ALL)
+        canvas.create_image(data.center,image=loadingFace)       
+        canvas.update()
+        train()
     if data.prevMode != []:
         data.mode = data.prevMode.pop(-1)
     
-    global canvas
-    loadingFace = ImageTk.PhotoImage(Image.open(data.utilPicPath+"loadingFace.png"))
-    canvas.delete(ALL)
-    canvas.create_image(data.center,image=loadingFace)       
-    canvas.update()
-    train()
 
 
 def EXIT(root,data):
@@ -534,11 +535,15 @@ def happyS2RedrawAll(root, canvas, data):
 def happyS3Init(data):
     exec("data.%sbg = ImageTk.PhotoImage(file=data.utilPicPath+'%s.png')" 
          % (data.mode, data.mode))
+    data.HAPPYS3flag = True
 
 def happyS3MousePressed(root, event, data):
     for button in data.utilButtonList:
         if button.inBounds(event.x, event.y):
             button.function(root,data)
+    if data.HAPPYS3flag: 
+        db.newBrowserTab("http://www.rottentomatoes.com")
+        data.HAPPYS3flag = False
 
 def happyS3KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -600,11 +605,15 @@ def sadS2RedrawAll(root, canvas, data):
 def sadS3Init(data):
     exec("data.%sbg = ImageTk.PhotoImage(file=data.utilPicPath+'%s.png')" 
          % (data.mode, data.mode))
+    data.SADS3flag = True
 
 def sadS3MousePressed(root, event, data):
     for button in data.utilButtonList:
         if button.inBounds(event.x, event.y):
             button.function(root,data)
+    if data.SADS3flag:
+        db.newBrowserTab("https://www.youtube.com/watch?v=Zwef7-CuZlg")
+        data.SADS3flag = False
 
 def sadS3KeyPressed(root, event, data):
     if event.keysym == "Escape":
@@ -719,6 +728,7 @@ def run(width=300, height=300):
     init(data)
     # create the root and the canvas
     root = Tk()
+    root.title("Outside In")
     initModes(data)
 
     global canvas
