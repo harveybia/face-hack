@@ -137,7 +137,7 @@ def getFacePrediction():
 
 @needsRecognizer
 def getUserEmotion():
-    predict = getFacePrediction()
+    predict, prob = getFacePrediction()
     if predict == 0:
         return EMO_NOTFOUND, prob
 
