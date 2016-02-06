@@ -1,5 +1,7 @@
 from Tkinter import *
-from facial import *
+import cv2
+from PIL import Image, ImageTk
+import facial
 
 # Animation framework from CMU 15-112 course page:
 # https://www.cs.cmu.edu/~112/notes/events-example0.py
@@ -8,16 +10,20 @@ from facial import *
 # Modes
 ########################################
 def init(data):
+    data.center = 540,360
     data.timerDelay = 10
-    data.counter = 0
+    data.mainCounter = 0
     data.terminate = False
     data.mode = "MAIN"
+    data.utilPicPath = "Utility Pictures/"
+
+def initModes(data):
+    mainInit(data)
 
 def exit(root, data):
-    global CAMERA
     data.terminate = True
     root.destroy()
-    CAMERA.release()
+    facial.CAMERA.release()
 
 def mousePressed(root, event, data):
     # use event.x and event.y
@@ -32,8 +38,8 @@ def keyPressed(root, event, data):
 
 def timerFired(root, data):
     if not data.terminate:
-        data.counter += 1
-        data.snapshot = getCameraSnapShot()
+        if data.mode == "MAIN":
+            mainTimerFired(root, data)
 
 def redrawAll(root, canvas, data):
     if not data.terminate:
@@ -45,9 +51,44 @@ def redrawAll(root, canvas, data):
 ########################################
 # Main Function: Emotion Recognition
 ########################################
+def mainInit(data):
+    data.mainWait = 1 # seconds
+    data.mainEmotion = None
+    data.mainBar = ImageTk.PhotoImage(file=data.utilPicPath+"no_signal.png")
+    data.mainBarPos = (1000,500)
+    loadEmotionPic(data)
+
+def loadEmotionPic(data):
+    data.sad = ImageTk.PhotoImage(file=data.utilPicPath+"sad.png")
+    data.happy = ImageTk.PhotoImage(file=data.utilPicPath+"happy.png")
+    data.angry = ImageTk.PhotoImage(file=data.utilPicPath+"angry.png")
+
+
+def mainTimerFired(root, data):
+    data.mainCounter = (data.mainCounter + 1) % 10000
+    data.snapshot = facial.getCameraSnapShot()
+    time = data.mainCounter * data.timerDelay / 1000 # in seconds
+    if time % data.mainWait == 0:
+        data.mainEmotion = facial.getUserEmotion()
 
 def mainRedrawAll(root, canvas, data):
-    canvas.create_image((540,360), image=data.snapshot)
+    canvas.create_image(data.center, image=data.sad)
+    canvas.sad = data.sad
+    print data.mainEmotion
+    # canvas.create_image((540,360), image=data.snapshot)
+    # # implement bar at the right
+    # canvas.create_image(data.mainBarPos, image=data.mainBar)
+    # implement figure on the left
+    if data.mainEmotion == facial.EMO_SAD:
+        print 1
+        canvas.create_image(data.center, image=data.sad)
+    if data.mainEmotion == facial.EMO_HAPPY:
+        canvas.create_image(data.center, image=data.happy)
+    if data.mainEmotion == facial.EMO_ANGRY:
+        canvas.create_image(data.center, image=data.angry)
+    # implement music
+    # implement recommendations
+
 
 ########################################
 # Run Function
@@ -86,6 +127,7 @@ def run(width=300, height=300):
     init(data)
     # create the root and the canvas
     root = Tk()
+    initModes(data)
     canvas = Canvas(root, width=data.width, height=data.height)
     canvas.pack()
     # set up events
