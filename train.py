@@ -1,4 +1,3 @@
-
 from Tkinter import *
 from PIL import ImageTk, Image
 import facial
@@ -28,12 +27,18 @@ def trainInit(data):
     data.highLightHappy = False
     data.highLightSad = False
     data.highLightAnger = False
+    data.selectHappy = False
+    data.selectSad = False
+    data.selectAnger = False
     data.imgCenter1 = (w / 2, 720 / 2)
     data.imgCenter2 = (w / 2 + w, 720 / 2)
     data.imgCenter3 = (w / 2 + 2*w, 720 / 2)
     data.imgCenter4 = (w / 2 + 3*w, 720 / 2)
     data.imgCenter5 = (w / 2 + 4*w, 720 / 2)
     data.utilPicPath = "utilitypic/"
+    data.happySaveSuccess = False
+    data.sadSaveSuccess = False
+    data.angerSaveSuccess = False
     
 def loadImage(data):
     data.disgustBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"disgustBW.jpg"))
@@ -49,35 +54,56 @@ def trainMousePressed(event, data):
     # use event.x and event.y
 
     if (event.x < data.margin3 and event.x > data.margin2): #Happy
+        data.selectHappy = not data.selectHappy
+        if (data.selectHappy == True):
+            data.selectSad = False
+            data.selectAnger = False
+    elif (event.x < data.margin4 and event.x > data.margin3): #Sad
+        data.selectSad = not data.selectSad
+        if (data.selectSad == True):
+            data.selectHappy = False
+            data.selectAnger = False
+    elif (event.x < data.margin5 and event.x > data.margin4): #anger
+        data.selectAnger = not data.selectAnger
+        if (data.selectAnger == True):
+            data.selectHappy = False
+            data.selectSad = False
+    if (event.x < data.margin3 and event.x > data.margin2): #Happy
         data.highLightHappy = not data.highLightHappy
         if (data.highLightHappy == True):
             data.highLightSad = False
             data.highLightAnger = False
-    if (event.x < data.margin4 and event.x > data.margin3): #Sad
+    elif (event.x < data.margin4 and event.x > data.margin3): #Sad
         data.highLightSad = not data.highLightSad
         if (data.highLightSad == True):
             data.highLightHappy = False
             data.highLightAnger = False
-    if (event.x < data.margin5 and event.x > data.margin4): #anger
+    elif (event.x < data.margin5 and event.x > data.margin4): #anger
         data.highLightAnger = not data.highLightAnger
         if (data.highLightAnger == True):
             data.highLightHappy = False
             data.highLightSad = False
+    if data.happySaveSuccess: data.highLightHappy = True
+    if data.sadSaveSuccess: data.highLightSad = True
+    if data.angerSaveSuccess: data.highLightAnger = True
 
-#def trainKeyPressed(event, data):
+def trainKeyPressed(event, data):
     # use event.char and event.keysym
-    #if (data.highlightHappy):
-     #   if (event.keysym == "c"):
-      #      happyFace = facial._getCameraRaw()
-       #     saveUserFace({"andrewID":{"happy":happyFace}})
-    #if (data.highLightSad):
-     #   if (event.keysym == "c"):
-      #      sadFace = facial._getCameraRaw()
-       #     saveUserFace({"andrewID":{"sad":sadFace}})
-    #if (data.highLightAnger):
-       # if (event.keysym == "c"):
-        #    angerFace = facial._getCameraRaw()
-         #   saveUserFace({"andrewID":{"anger":angerFace}})
+    if (data.selectHappy):
+       if (event.keysym == "c"):
+           happyFace = facial._getCameraRaw()
+           facial.saveUserFace({"henryz":{"happy":happyFace}})
+           data.happySaveSuccess = True
+    if (data.selectSad):
+       if (event.keysym == "c"):
+           sadFace = facial._getCameraRaw()
+           facial.saveUserFace({"henryz":{"sad":sadFace}})
+           data.sadSaveSuccess = True
+    if (data.selectAnger):
+       if (event.keysym == "c"):
+           angerFace = facial._getCameraRaw()
+           facial.saveUserFace({"henryz":{"anger":angerFace}})
+           data.angerSaveSuccess = True
 
 def trainTimerFired(data):
     pass
@@ -108,19 +134,19 @@ def trainRedrawAll(canvas, data):
 def run(width=300, height=300):
     def redrawAllWrapper(canvas, data):
         canvas.delete(ALL)
-        redrawAll(canvas, data)
+        trainRedrawAll(canvas, data)
         canvas.update()    
 
     def mousePressedWrapper(event, canvas, data):
-        mousePressed(event, data)
+        trainMousePressed(event, data)
         redrawAllWrapper(canvas, data)
 
     def keyPressedWrapper(event, canvas, data):
-        keyPressed(event, data)
+        trainKeyPressed(event, data)
         redrawAllWrapper(canvas, data)
 
     def timerFiredWrapper(canvas, data):
-        timerFired(data)
+        trainTimerFired(data)
         redrawAllWrapper(canvas, data)
         # pause, then call timerFired again
         canvas.after(data.timerDelay, timerFiredWrapper, canvas, data)
