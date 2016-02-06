@@ -1,0 +1,5 @@
+*.DS_Store
+*.pyc
+.Spotlight-V100
+.Trashes
+Thumbs.db

@@ -1,5 +1,6 @@
 from Tkinter import *
 from PIL import ImageTk, Image
+import tkSimpleDialog
 import facial
 
 
@@ -14,6 +15,9 @@ def mousePressed(event, data):
     trainMousePressed(event, data)
 def redrawAll(canvas, data):
     trainRedrawAll(canvas, data)
+
+def enterAndrewId(data):
+    data.andrewID = tkSimpleDialog.askstring("You Are ...", "AndrewID")
 
 
 def trainInit(data):
@@ -35,20 +39,20 @@ def trainInit(data):
     data.imgCenter3 = (w / 2 + 2*w, 720 / 2)
     data.imgCenter4 = (w / 2 + 3*w, 720 / 2)
     data.imgCenter5 = (w / 2 + 4*w, 720 / 2)
-    data.utilPicPath = "utilitypic/"
+    data.utilPicPath = "face-hack/utilitypic/"
     data.happySaveSuccess = False
     data.sadSaveSuccess = False
     data.angerSaveSuccess = False
     
 def loadImage(data):
-    data.disgustBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"disgustBW.jpg"))
-    data.happyBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happyBW.jpg"))
-    data.angerBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"angerBW.jpg"))
-    data.fearBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"fearBW.jpg"))
-    data.sadBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sadBW.jpg"))
-    data.sad = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sad.jpg"))
-    data.happy = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happy.jpg"))
-    data.anger = ImageTk.PhotoImage(Image.open(data.utilPicPath+"anger.jpg"))
+    data.disgustNewBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"disgustNewBW.jpg"))
+    data.happyNewBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happyNewBW.jpg"))
+    data.angerNewBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"angerNewBW.jpg"))
+    data.fearNewBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"fearNewBW.jpg"))
+    data.sadNewBW = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sadNewBW.jpg"))
+    data.sadNew = ImageTk.PhotoImage(Image.open(data.utilPicPath+"sadNew.jpg"))
+    data.happyNew = ImageTk.PhotoImage(Image.open(data.utilPicPath+"happyNew.jpg"))
+    data.angerNew = ImageTk.PhotoImage(Image.open(data.utilPicPath+"angerNew.jpg"))
 
 def trainMousePressed(event, data):
     # use event.x and event.y
@@ -92,17 +96,17 @@ def trainKeyPressed(event, data):
     if (data.selectHappy):
        if (event.keysym == "c"):
            happyFace = facial._getCameraRaw()
-           facial.saveUserFace({"henryz":{"happy":happyFace}})
+           facial.saveUserFace({data.andrewID:{"happy":happyFace}})
            data.happySaveSuccess = True
     if (data.selectSad):
        if (event.keysym == "c"):
            sadFace = facial._getCameraRaw()
-           facial.saveUserFace({"henryz":{"sad":sadFace}})
+           facial.saveUserFace({data.andrewID:{"sad":sadFace}})
            data.sadSaveSuccess = True
     if (data.selectAnger):
        if (event.keysym == "c"):
            angerFace = facial._getCameraRaw()
-           facial.saveUserFace({"henryz":{"anger":angerFace}})
+           facial.saveUserFace({data.andrewID:{"anger":angerFace}})
            data.angerSaveSuccess = True
 
 def trainTimerFired(data):
@@ -110,21 +114,21 @@ def trainTimerFired(data):
 
 def trainRedrawAll(canvas, data):
     # draw in canvas
-    canvas.create_image(data.imgCenter1, image = data.disgustBW)
-    canvas.create_image(data.imgCenter5, image = data.fearBW)
+    canvas.create_image(data.imgCenter1, image = data.disgustNewBW)
+    canvas.create_image(data.imgCenter5, image = data.fearNewBW)
     # First Create the two that we won't change in this project
     if (data.highLightHappy):
-        canvas.create_image(data.imgCenter2, image = data.happy)
+        canvas.create_image(data.imgCenter2, image = data.happyNew)
     if (not data.highLightHappy):
-        canvas.create_image(data.imgCenter2, image = data.happyBW)
+        canvas.create_image(data.imgCenter2, image = data.happyNewBW)
     if (data.highLightSad):
-        canvas.create_image(data.imgCenter3, image = data.sad)
+        canvas.create_image(data.imgCenter3, image = data.sadNew)
     if (not data.highLightSad):
-        canvas.create_image(data.imgCenter3, image = data.sadBW)
+        canvas.create_image(data.imgCenter3, image = data.sadNewBW)
     if (data.highLightAnger):
-        canvas.create_image(data.imgCenter4, image = data.anger)
+        canvas.create_image(data.imgCenter4, image = data.angerNew)
     if (not data.highLightAnger):
-        canvas.create_image(data.imgCenter4, image = data.angerBW)
+        canvas.create_image(data.imgCenter4, image = data.angerNewBW)
 
 
 ####################################
@@ -142,8 +146,8 @@ def run(width=300, height=300):
         redrawAllWrapper(canvas, data)
 
     def keyPressedWrapper(event, canvas, data):
-        trainKeyPressed(event, data)
-        redrawAllWrapper(canvas, data)
+            trainKeyPressed(event, data)
+            redrawAllWrapper(canvas, data)
 
     def timerFiredWrapper(canvas, data):
         trainTimerFired(data)
@@ -160,6 +164,9 @@ def run(width=300, height=300):
     # create the root and the canvas
     root = Tk()
     loadImage(data)
+    enterAndrewId(data)
+    
+
     canvas = Canvas(root, width=data.width, height=data.height)
     canvas.pack()
     # set up events
