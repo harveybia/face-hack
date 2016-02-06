@@ -9,7 +9,7 @@ EMO_HAPPY = 102
 
 CAMERA_PORT = 0
 # Number of frames to throw away while the camera adjusts to light levels
-RAMP_FRAMES = 5
+RAMP_FRAMES = 1
 
 CAMERA = cv2.VideoCapture(CAMERA_PORT)
 
